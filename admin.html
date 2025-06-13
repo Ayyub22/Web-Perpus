@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Perpustakaan - Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      background-color: #f0f2f5; /* Slightly different background for main area */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    .admin-wrapper {
+      display: flex;
+      flex-grow: 1;
+    }
+
+    #sidebar {
+      width: 260px;
+      background-color: #2c3e50; /* Dark blue-grey from screenshot */
+      color: white;
+      padding-top: 0; /* Remove padding to make header flush */
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    #sidebar .admin-panel-header {
+      padding: 1.1rem 1.5rem; /* Match screenshot padding */
+      font-size: 1.25rem;    /* Match screenshot font size */
+      font-weight: 600;     /* Match screenshot font weight */
+      background-color: #34495e; /* Slightly darker header for sidebar */
+      border-bottom: 1px solid #46607a;
+      display: flex;
+      align-items: center;
+    }
+    #sidebar .admin-panel-header .fas {
+        margin-right: 10px;
+    }
+
+
+    #sidebar .nav-link {
+      color: #bdc3c7; /* Lighter grey for inactive links */
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      border-left: 4px solid transparent; /* For active indicator */
+    }
+
+    #sidebar .nav-link .fas {
+      margin-right: 12px;
+      width: 20px; /* Ensure icons align */
+      text-align: center;
+    }
+
+    #sidebar .nav-link:hover {
+      background-color: #34495e;
+      color: #ffffff;
+      border-left-color: #3498db; /* Accent color on hover */
+    }
+
+    #sidebar .nav-link.active {
+      background-color: #1f2b38; /* Darker for active */
+      color: #ffffff;
+      font-weight: 500;
+      border-left-color: #3498db; /* Primary color from screenshot */
+    }
+    #sidebar .sidebar-bottom {
+        margin-top: auto; /* Pushes "Keluar" to the bottom */
+    }
+
+
+    #mainContent {
+      flex-grow: 1;
+      padding: 25px;
+      background-color: #f0f2f5;
+      overflow-y: auto; /* Allow content to scroll if it exceeds viewport */
+    }
+
+    .content-panel {
+      display: none; /* Hide all panels by default */
+    }
+
+    .content-panel.active {
+      display: block; /* Show active panel */
+    }
+    
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.8rem;
+    }
+
+    .page-header h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #343a40;
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+    }
+    .page-header h2 .fas {
+        margin-right: 10px;
+        color: #007bff; /* Match icon color in headers */
+    }
+
+    .summary-card {
+      border: none;
+      border-radius: 8px;
+      color: white;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .summary-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+
+    .summary-card .card-body {
+      padding: 1.5rem;
+    }
+    .summary-card .card-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .summary-card .card-text {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .summary-card .card-link {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+    }
+    .summary-card .card-link:hover {
+      color: white;
+    }
+    .summary-card .card-link .fas {
+      margin-left: 5px;
+    }
+
+    .bg-total-buku { background-color: #007bff; } /* Blue */
+    .bg-buku-dipinjam { background-color: #28a745; } /* Green */
+    .bg-pengguna { background-color: #17a2b8; } /* Teal */
+    .bg-ulasan-baru { background-color: #ffc107; color: #333 !important; } /* Yellow */
+    .bg-ulasan-baru .card-link { color: #5a5a5a !important; }
+    .bg-ulasan-baru .card-link:hover { color: #212529 !important; }
+
+
+    .card.table-card {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border: none;
+    }
+    .card.table-card .card-header {
+        background-color: #ffffff;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 1rem 1.25rem;
+    }
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    .table .badge {
+        font-size: 0.8em;
+        padding: 0.5em 0.75em;
+    }
+    .table img.cover-thumbnail {
+        width: 40px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 3px;
+        margin-right: 10px;
+    }
+    .action-buttons .btn {
+        margin: 0 2px;
+    }
+
+    .btn-custom-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+    .btn-custom-primary:hover {
+        background-color: #0069d9;
+        border-color: #0062cc;
+    }
+    
+    .filter-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+    .filter-bar .form-control, .filter-bar .form-select {
+        height: calc(1.5em + .75rem + 2px); /* Standard button height */
+    }
+    .input-group .btn {
+         z-index: 2; /* Ensure button is clickable over input shadow */
+    }
+
+    /* Pagination styling similar to screenshots */
+    .pagination .page-item .page-link {
+        color: #007bff;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+    }
+    
+    /* Recommendation specific styles */
+    .recommendation-settings .form-check-input {
+        margin-top: 0.4rem; /* Align checkboxes better */
+    }
+    .recommendation-settings .form-label {
+        margin-bottom: 0.2rem;
+    }
+
+    /* Styling for chart wrapper */
+    .chart-wrapper {
+      position: relative;
+      height: 150px; /* You can adjust this height as needed */
+      width: 100%;   /* Ensures it takes the column width */
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="admin-wrapper">
+    <nav id="sidebar">
+      <div class="admin-panel-header">
+        <i class="fas fa-cogs"></i> Admin Panel
+      </div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link active" href="#dashboardContent" data-target="dashboardContent"><i class="fas fa-tachometer-alt"></i>Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#manajemenBukuContent" data-target="manajemenBukuContent"><i class="fas fa-book"></i>Manajemen Buku</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#rekomendasiContent" data-target="rekomendasiContent"><i class="fas fa-star"></i>Rekomendasi</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#laporanPeminjamanContent" data-target="laporanPeminjamanContent"><i class="fas fa-chart-line"></i>Laporan Peminjaman</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#manajemenPenggunaContent" data-target="manajemenPenggunaContent"><i class="fas fa-users"></i>Manajemen Pengguna</a>
+        </li>
+      </ul>
+      <ul class="nav flex-column sidebar-bottom">
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="logoutButton"><i class="fas fa-sign-out-alt"></i>Keluar</a>
+        </li>
+      </ul>
+    </nav>
+
+    <main id="mainContent">
+      <div id="dashboardContent" class="content-panel active">
+        <div class="page-header">
+            <h2><i class="fas fa-tachometer-alt"></i> Dashboard Admin</h2>
+        </div>
+        
+        <div class="row">
+          <div class="col-xl-3 col-md-6">
+            <div class="card summary-card bg-total-buku">
+              <div class="card-body">
+                <div class="card-title">Total Buku</div>
+                <div class="card-text">1,245</div>
+                <a href="#" class="card-link">Lihat semua <i class="fas fa-arrow-circle-right"></i></a>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-md-6">
+            <div class="card summary-card bg-buku-dipinjam">
+              <div class="card-body">
+                <div class="card-title">Buku Dipinjam</div>
+                <div class="card-text">187</div>
+                <a href="#" class="card-link">Lihat laporan <i class="fas fa-arrow-circle-right"></i></a>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-md-6">
+            <div class="card summary-card bg-pengguna">
+              <div class="card-body">
+                <div class="card-title">Pengguna</div>
+                <div class="card-text">542</div>
+                <a href="#" class="card-link">Kelola pengguna <i class="fas fa-arrow-circle-right"></i></a>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-md-6">
+            <div class="card summary-card bg-ulasan-baru">
+              <div class="card-body">
+                <div class="card-title">Ulasan Baru</div>
+                <div class="card-text">23</div>
+                <a href="#" class="card-link">Moderasi <i class="fas fa-arrow-circle-right"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card table-card mt-4">
+          <div class="card-header">
+            Peminjaman Terbaru
+          </div>
+          <div class="card-body">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>ID Pinjam</th>
+                  <th>Judul Buku</th>
+                  <th>Peminjam</th>
+                  <th>Tanggal Pinjam</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#12345</td>
+                  <td>Atomic Habits</td>
+                  <td>Sarah Johnson</td>
+                  <td>15 Jun 2023</td>
+                  <td><span class="badge bg-success">Dipinjam</span></td>
+                  <td><button class="btn btn-sm btn-outline-primary">Detail</button></td>
+                </tr>
+                <tr>
+                  <td>#12344</td>
+                  <td>Deep Work</td>
+                  <td>Michael Chen</td>
+                  <td>14 Jun 2023</td>
+                  <td><span class="badge bg-success">Dipinjam</span></td>
+                  <td><button class="btn btn-sm btn-outline-primary">Detail</button></td>
+                </tr>
+                <tr>
+                  <td>#12343</td>
+                  <td>The Psychology of Money</td>
+                  <td>Emma Rodriguez</td>
+                  <td>13 Jun 2023</td>
+                  <td><span class="badge bg-warning text-dark">Perpanjangan</span></td>
+                  <td><button class="btn btn-sm btn-outline-primary">Detail</button></td>
+                </tr>
+                <tr>
+                  <td>#12342</td>
+                  <td>Sapiens</td>
+                  <td>David Wilson</td>
+                  <td>10 Jun 2023</td>
+                  <td><span class="badge bg-danger">Terlambat</span></td>
+                  <td><button class="btn btn-sm btn-outline-primary">Detail</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="manajemenBukuContent" class="content-panel">
+        <div class="page-header">
+            <h2><i class="fas fa-book"></i> Manajemen Buku</h2>
+            <button class="btn btn-custom-primary"><i class="fas fa-plus me-1"></i> Tambah Buku</button>
+        </div>
+        <div class="card table-card">
+            <div class="card-body">
+                <div class="filter-bar">
+                    <div class="input-group flex-grow-1">
+                        <input type="text" class="form-control" placeholder="Cari buku...">
+                        <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
+                    </div>
+                    <select class="form-select" style="max-width: 200px;">
+                        <option selected>Filter Kategori</option>
+                        <option value="1">Pengembangan Diri</option>
+                        <option value="2">Bisnis</option>
+                        <option value="3">Sejarah</option>
+                        </select>
+                </div>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cover</th>
+                            <th>Judul</th>
+                            <th>Penulis</th>
+                            <th>Kategori</th>
+                            <th>Stok</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminBookListTable">
+                        </tbody>
+                </table>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+      </div>
+
+      <div id="rekomendasiContent" class="content-panel">
+        <div class="page-header">
+            <h2><i class="fas fa-star"></i> Manajemen Rekomendasi</h2>
+            <button class="btn btn-custom-primary"><i class="fas fa-plus me-1"></i> Tambah Rekomendasi</button>
+        </div>
+        <div class="card table-card mb-4">
+            <div class="card-header">Rekomendasi Berdasarkan Kategori</div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Kategori</th>
+                            <th>Buku yang Direkomendasikan</th>
+                            <th>Prioritas</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Pengembangan Diri</td>
+                            <td>Atomic Habits, Deep Work, The Power of Habit</td>
+                            <td>
+                                <select class="form-select form-select-sm">
+                                    <option>Rendah</option>
+                                    <option selected>Sedang</option>
+                                    <option>Tinggi</option>
+                                </select>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                         <tr>
+                            <td>Bisnis</td>
+                            <td>The Psychology of Money, Rich Dad Poor Dad</td>
+                            <td>
+                                <select class="form-select form-select-sm">
+                                    <option>Rendah</option>
+                                    <option>Sedang</option>
+                                    <option selected>Tinggi</option>
+                                </select>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Fiksi</td>
+                            <td>The Silent Patient, The Alchemist</td>
+                            <td>
+                                <select class="form-select form-select-sm">
+                                    <option>Rendah</option>
+                                    <option selected>Sedang</option>
+                                    <option>Tinggi</option>
+                                </select>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card table-card recommendation-settings">
+            <div class="card-header">Rekomendasi Personalisasi</div>
+            <div class="card-body">
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <div>
+                        Sistem rekomendasi personalisasi menggunakan algoritma berbasis preferensi pengguna dan riwayat peminjaman.
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="minRating" class="form-label">Minimal Rating (1-5): <span id="minRatingValue">3.5</span></label>
+                        <input type="range" class="form-range" min="1" max="5" step="0.5" id="minRating" value="3.5" oninput="document.getElementById('minRatingValue').textContent = this.value">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Bobot Parameter:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="prefPengguna" checked>
+                            <label class="form-check-label" for="prefPengguna">Preferensi Pengguna</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="riwayatPeminjaman" checked>
+                            <label class="form-check-label" for="riwayatPeminjaman">Riwayat Peminjaman</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="popularitasBuku">
+                            <label class="form-check-label" for="popularitasBuku">Popularitas Buku</label>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3"><i class="fas fa-save me-1"></i> Simpan Pengaturan</button>
+            </div>
+        </div>
+      </div>
+
+      <div id="laporanPeminjamanContent" class="content-panel">
+        <div class="page-header">
+            <h2><i class="fas fa-chart-line"></i> Laporan Peminjaman</h2>
+            <div>
+                <button class="btn btn-outline-secondary"><i class="fas fa-download me-1"></i> Export</button>
+                <button class="btn btn-custom-primary"><i class="fas fa-filter me-1"></i> Filter</button>
+            </div>
+        </div>
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item"><a class="nav-link active" aria-current="page" href="#">Aktif</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Terlambat</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Selesai</a></li>
+        </ul>
+        <div class="card table-card">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID Pinjam</th>
+                            <th>Judul Buku</th>
+                            <th>Peminjam</th>
+                            <th>Tanggal Pinjam</th>
+                            <th>Tanggal Kembali</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#12345</td>
+                            <td>Atomic Habits</td>
+                            <td>Sarah Johnson</td>
+                            <td>15 Jun 2023</td>
+                            <td>30 Jun 2023</td>
+                            <td><span class="badge bg-success">Aktif</span></td>
+                            <td><button class="btn btn-sm btn-outline-primary">Detail</button></td>
+                        </tr>
+                        <tr>
+                            <td>#12344</td>
+                            <td>Deep Work</td>
+                            <td>Michael Chen</td>
+                            <td>14 Jun 2023</td>
+                            <td>29 Jun 2023</td>
+                            <td><span class="badge bg-success">Aktif</span></td>
+                            <td><button class="btn btn-sm btn-outline-primary">Detail</button></td>
+                        </tr>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card table-card mt-4">
+            <div class="card-header">Statistik Peminjaman</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Peminjaman Bulan Ini</h6>
+                        <div class="chart-wrapper">
+                            <canvas id="peminjamanBulanChart"></canvas>
+                        </div>
+                        <p class="text-center text-muted small mt-2">Chart: Peminjaman Mingguan</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Kategori Paling Populer</h6>
+                        <div class="chart-wrapper">
+                            <canvas id="kategoriPopulerChart"></canvas>
+                        </div>
+                        <p class="text-center text-muted small mt-2">Chart: Distribusi Kategori</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div id="manajemenPenggunaContent" class="content-panel">
+        <div class="page-header">
+            <h2><i class="fas fa-users"></i> Manajemen Pengguna</h2>
+            <button class="btn btn-custom-primary"><i class="fas fa-user-plus me-1"></i> Tambah Pengguna</button>
+        </div>
+         <div class="card table-card">
+            <div class="card-body">
+                <div class="filter-bar">
+                     <div class="input-group flex-grow-1">
+                        <input type="text" class="form-control" placeholder="Cari pengguna...">
+                        <button class="btn btn-outline-secondary" type="button"><i class="fas fa-search"></i></button>
+                    </div>
+                    <select class="form-select" style="max-width: 200px;">
+                        <option selected>Semua Peran</option>
+                        <option value="admin">Admin</option>
+                        <option value="anggota">Anggota</option>
+                    </select>
+                </div>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Foto</th>
+                            <th>Nama</th>
+                            <th>Email</th>
+                            <th>Peran</th>
+                            <th>Bergabung</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>US001</td>
+                            <td><img src="https://via.placeholder.com/40" alt="User" class="rounded-circle cover-thumbnail"></td>
+                            <td>Sarah Johnson</td>
+                            <td>sarah@example.com</td>
+                            <td><span class="badge bg-info">Anggota</span></td>
+                            <td>15 Jan 2023</td>
+                            <td><span class="badge bg-success">Aktif</span></td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="fas fa-user-times"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>US002</td>
+                            <td><img src="https://via.placeholder.com/40" alt="User" class="rounded-circle cover-thumbnail"></td>
+                            <td>Michael Chen</td>
+                            <td>michael@example.com</td>
+                             <td><span class="badge bg-info">Anggota</span></td>
+                            <td>10 Feb 2023</td>
+                            <td><span class="badge bg-success">Aktif</span></td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="fas fa-user-times"></i></button>
+                            </td>
+                        </tr>
+                         <tr>
+                            <td>US003</td>
+                            <td><img src="https://via.placeholder.com/40" alt="User" class="rounded-circle cover-thumbnail"></td>
+                            <td>Emma Rodriguez</td>
+                            <td>emma@example.com</td>
+                             <td><span class="badge bg-info">Anggota</span></td>
+                            <td>05 Mar 2023</td>
+                            <td><span class="badge bg-success">Aktif</span></td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="fas fa-user-times"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>AD001</td>
+                            <td><img src="https://via.placeholder.com/40" alt="User" class="rounded-circle cover-thumbnail"></td>
+                            <td>Admin User</td>
+                            <td>admin@perpustakaan.com</td>
+                            <td><span class="badge bg-danger">Admin</span></td>
+                            <td>01 Jan 2023</td>
+                            <td><span class="badge bg-success">Aktif</span></td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="fas fa-user-times"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Dummy data (can be replaced with actual data fetching)
+    const dummyBooks = [
+      { id: "1", title: "Atomic Habits", author: "James Clear", category: "Pengembangan Diri", stock: 15, image: "https://via.placeholder.com/40x60?text=Book1" },
+      { id: "2", title: "Deep Work", author: "Cal Newport", category: "Pengembangan Diri", stock: 8, image: "https://via.placeholder.com/40x60?text=Book2" },
+      { id: "3", title: "The Psychology of Money", author: "Morgan Housel", category: "Bisnis", stock: 12, image: "https://via.placeholder.com/40x60?text=Book3" },
+      { id: "4", title: "Sapiens", author: "Yuval Noah Harari", category: "Sejarah", stock: 10, image: "https://via.placeholder.com/40x60?text=Book4" },
+      { id: 5, title: "Mega", author: "Feypotter", category: "Romantis", stock: 7, image: "https://via.placeholder.com/40x60?text=Book5" },
+      { id: 6, title: "Menuju Harapan", author: "Pramoedya Ananta Toer", category: "Fiksi Petualangan", stock: 9, image: "https://via.placeholder.com/40x60?text=Book6" }
+    ];
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const navLinks = document.querySelectorAll('#sidebar .nav-link[data-target]');
+      const contentPanels = document.querySelectorAll('.content-panel');
+      const adminBookListTableBody = document.getElementById('adminBookListTable');
+
+      // Function to populate book list in Manajemen Buku
+      function populateAdminBookList() {
+        if (!adminBookListTableBody) return;
+        adminBookListTableBody.innerHTML = ''; // Clear existing rows
+        dummyBooks.forEach(book => {
+          const row = `
+            <tr>
+              <td>${book.id}</td>
+              <td><img src="${book.image}" alt="${book.title}" class="cover-thumbnail"></td>
+              <td>${book.title}</td>
+              <td>${book.author}</td>
+              <td>${book.category}</td>
+              <td>${book.stock}</td>
+              <td class="action-buttons">
+                <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-outline-danger" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+              </td>
+            </tr>
+          `;
+          adminBookListTableBody.innerHTML += row;
+        });
+      }
+
+      // Variables for Laporan Peminjaman charts
+      let peminjamanBulanChartInstance = null;
+      let kategoriPopulerChartInstance = null;
+      let laporanChartsInitialized = false;
+
+      // Function to initialize charts for Laporan Peminjaman
+      function initLaporanPeminjamanCharts() {
+        if (laporanChartsInitialized) {
+          return; // Already initialized
+        }
+
+        // Ensure the panel is active before initializing
+        const laporanPanel = document.getElementById('laporanPeminjamanContent');
+        if (!laporanPanel || !laporanPanel.classList.contains('active')) {
+            return; 
+        }
+        
+        try {
+          // Peminjaman Bulan Ini Chart
+          const peminjamanCtx = document.getElementById('peminjamanBulanChart')?.getContext('2d');
+          if (peminjamanCtx && !peminjamanBulanChartInstance) {
+              peminjamanBulanChartInstance = new Chart(peminjamanCtx, {
+                  type: 'bar',
+                  data: {
+                      labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'],
+                      datasets: [{
+                          label: 'Jumlah Peminjaman',
+                          data: [12, 19, 15, 22],
+                          backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                          borderColor: 'rgba(0, 123, 255, 1)',
+                          borderWidth: 1
+                      }]
+                  },
+                  options: { scales: { y: { beginAtZero: true } }, responsive: true, maintainAspectRatio: false }
+              });
+          }
+
+          // Kategori Populer Chart
+          const kategoriCtx = document.getElementById('kategoriPopulerChart')?.getContext('2d');
+          if (kategoriCtx && !kategoriPopulerChartInstance) {
+              kategoriPopulerChartInstance = new Chart(kategoriCtx, {
+                  type: 'pie',
+                  data: {
+                      labels: ['Pengembangan Diri', 'Bisnis', 'Sains', 'Fiksi', 'Lainnya'],
+                      datasets: [{
+                          label: 'Kategori Populer',
+                          data: [30, 25, 15, 20, 10],
+                          backgroundColor: ['#007bff', '#28a745', '#ffc107', '#17a2b8', '#6c757d'],
+                      }]
+                  },
+                  options: { responsive: true, maintainAspectRatio: false }
+              });
+          }
+          
+          // Mark as initialized if the canvas elements were found, to prevent repeated attempts
+          if (document.getElementById('peminjamanBulanChart') || document.getElementById('kategoriPopulerChart')) {
+            laporanChartsInitialized = true;
+          }
+
+        } catch (e) {
+            console.error("Error initializing Laporan Peminjaman charts:", e);
+        }
+      }
+
+
+      navLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+          event.preventDefault();
+          const targetId = this.getAttribute('data-target');
+
+          // Update active link in sidebar
+          navLinks.forEach(nav => nav.classList.remove('active'));
+          this.classList.add('active');
+
+          // Show/hide content panels
+          contentPanels.forEach(panel => {
+            if (panel.id === targetId) {
+              panel.classList.add('active');
+              // If the Laporan Peminjaman panel is activated, initialize its charts
+              if (targetId === 'laporanPeminjamanContent') {
+                initLaporanPeminjamanCharts();
+              }
+            } else {
+              panel.classList.remove('active');
+            }
+          });
+        });
+      });
+
+      // Activate the default view (Dashboard)
+      const defaultActiveLink = document.querySelector('#sidebar .nav-link.active');
+      if (defaultActiveLink) {
+          const targetId = defaultActiveLink.getAttribute('data-target');
+          const targetPanel = document.getElementById(targetId);
+          if (targetPanel) {
+              targetPanel.classList.add('active');
+              // If dashboard had charts, an initDashboardCharts() could be called here.
+          }
+      }
+      
+      // Populate initial data for book list
+      populateAdminBookList();
+
+      // Logout button (example functionality)
+      const logoutButton = document.getElementById('logoutButton');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          alert('Proses keluar...');
+          // Add actual logout logic here, e.g., redirect to login page
+        });
+      }
+
+    });
+  </script>
+</body>
+</html>

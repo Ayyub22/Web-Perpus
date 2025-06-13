@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Buku</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-custom { background-color: #343a40 !important; }
+        .navbar-brand-custom { font-weight: bold; color: #fff !important; }
+        .navbar-brand-custom:hover { color: #f0f0f0 !important; }
+        .book-detail-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+        .book-cover {
+            max-width: 100%;
+            height: auto;
+            max-height: 450px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .book-title { color: #007bff; margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        .book-meta { font-size: 0.95rem; color: #555; margin-bottom: 8px; }
+        .book-meta strong { color: #333; }
+        .book-description { margin-top: 20px; line-height: 1.7; color: #444; }
+        .reviews-section { margin-top: 40px; }
+        .reviews-section h3 { color: #28a745; margin-bottom: 20px; border-bottom: 2px solid #28a745; padding-bottom: 10px;}
+        .review-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+        }
+        .review-item strong { color: #333; }
+        .review-item p { margin-bottom: 0; font-size: 0.9rem; color: #555; }
+        .add-review-form h4 { margin-bottom: 15px; color: #17a2b8; }
+        .btn-back { margin-top:30px; margin-bottom: 30px; }
+        .form-label { font-weight: 500; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand navbar-brand-custom" href="user.html"><i class="fas fa-book-open me-2"></i> Perpustakaan Bookie - Detail Buku</a>
+            <a href="user.html" class="btn btn-outline-light btn-sm"><i class="fas fa-arrow-left me-1"></i> Kembali ke Beranda</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="bookDetailContent" class="book-detail-container" style="display: none;">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <img id="bookCover" src="" alt="Cover Buku" class="book-cover img-fluid">
+                </div>
+                <div class="col-md-8">
+                    <h2 id="bookTitle" class="book-title"></h2>
+                    <p class="book-meta"><strong><i class="fas fa-user-edit me-1"></i> Pengarang:</strong> <span id="bookAuthor"></span></p>
+                    <p class="book-meta"><strong><i class="fas fa-tags me-1"></i> Kategori:</strong> <span id="bookCategory"></span></p>
+                    <div class="book-description">
+                        <h4><i class="fas fa-info-circle me-1"></i> Deskripsi:</h4>
+                        <p id="bookDescription"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reviews-section mt-5">
+                <h3><i class="fas fa-comments me-2"></i> Ulasan Buku</h3>
+                <div id="bookReviewsList" class="mb-4">
+                    </div>
+
+                <div class="add-review-form card p-3">
+                     <h4 class="mb-3"><i class="fas fa-pen-alt me-1"></i> Berikan Ulasan Anda</h4>
+                    <form id="reviewForm">
+                        <input type="hidden" id="reviewBookId">
+                        <div class="mb-3">
+                            <label for="reviewerName" class="form-label">Nama Anda:</label>
+                            <input type="text" class="form-control form-control-sm" id="reviewerName" placeholder="Nama (opsional)">
+                        </div>
+                        <div class="mb-3">
+                            <label for="reviewText" class="form-label">Ulasan Anda:</label>
+                            <textarea class="form-control form-control-sm" id="reviewText" rows="3" required placeholder="Tulis ulasan Anda di sini..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-paper-plane me-2"></i> Kirim Ulasan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div id="loadingMessage" class="text-center mt-5">
+            <p class="lead">Memuat detail buku...</p>
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div id="errorMessage" class="alert alert-danger mt-5" style="display: none;">
+            Buku tidak ditemukan atau terjadi kesalahan. <a href="user.html" class="alert-link">Kembali ke beranda</a>.
+        </div>
+
+        <div class="text-center btn-back">
+             <a href="user.html" class="btn btn-primary"><i class="fas fa-home me-1"></i> Kembali ke Daftar Buku</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Data Dummy Buku (idealnya ini akan di-fetch atau dari file JS terpisah jika aplikasi besar)
+        // Pastikan path gambar sesuai dengan struktur folder Anda
+        const dummyBooks = [
+            { id: 1, title: "Lost At Sea", description: "Kisah anak laki-laki yang terdampar di laut setelah sebuah badai melanda kapal yang mereka tumpangi.", author: "John Doe", category: "Petualangan", image: "images/lost at sea.jpg", reviews: [] },
+            { id: 2, title: "Our Memories on This Beach", description: "Kisah dua orang yang memiliki kisah asmara dan pantai selalu menjadi latar belakang cerita mereka.", author: "Anisa Ranti", category: "Romantis", image: "images/Our Memories.jpg", reviews: [{user: "Penggemar Pantai", text: "Ceritanya menyentuh!"}] },
+            { id: 3, title: "Today I'm Here alone", description: "Sebuah cerita tentang kesendirian mungkin menjadi pilihan terbaik bagi seseorang yang selalu merasa gagal dalam segala hal.", author: "Julia Kianika", category: "Slice of Life", image: "images/today im here alone.jpg", reviews: [] },
+            { id: 4, title: "Arah Kembali", description: "Berkisah tentang dua hati yang tersesat, lalu menemukan cinta saat senja membawa mereka pulang.", author: "Lub", category: "Romantis Fiksi", image: "images/arah kembali.jpg", reviews: [{user: "Senja Lover", text: "Indah sekali!"}] },
+            { id: 5, title: "Mega", description: "setelah sekian lama, selalu dirimu.", author: "Feypotter", category: "Romantis", image: "images/Mega.jpg", reviews: [] },
+            { id: 6, title: "Menuju Harapan", description: "petualangan penuh imajinasi dan optimisme yang dialami oleh dua orang siswa berseragam sekolah.", author: "Pramoedya Ananta Toer", category: "Fiksi Petualangan", image: "images/menuju harapan.jpg", reviews: [{user: "Rizky Knalpot", text: "Kisahnya sungguh menarik!"}] },
+            { id: 7, title: "Young Marriage", description: "Cerita berpusat pada seorang wanita muda yang menghadapi dilema dalam pernikahannya", author: "Edelweis", category: "Romantis", image: "images/young marriage.jpg", reviews: [] },
+            { id: 8, title: "Hari Kasih Sayang", description: "Mengangkat kisah romansa yang hangat dan penuh keceriaan, berlatar suasana perayaan Hari Valentine.", author: "Pramoedya Ananta Toer", category: "Romantis Sekolah", image: "images/Hari Kasih Sayang.jpg", reviews: [] }
+        ];
+
+        // Fungsi untuk menyimpan semua ulasan (dari semua buku) ke localStorage
+        function saveAllReviewsToLocalStorage() {
+            // Kita hanya menyimpan bagian reviews dari dummyBooks untuk efisiensi
+            const reviewsToStore = dummyBooks.map(book => ({ id: book.id, reviews: book.reviews }));
+            localStorage.setItem('bookReviews', JSON.stringify(reviewsToStore));
+        }
+
+        // Fungsi untuk memuat semua ulasan dari localStorage dan menggabungkannya ke dummyBooks
+        function loadAllReviewsFromLocalStorage() {
+            const storedReviewsData = localStorage.getItem('bookReviews');
+            if (storedReviewsData) {
+                const allBookReviews = JSON.parse(storedReviewsData);
+                allBookReviews.forEach(storedBookReview => {
+                    const bookInMemory = dummyBooks.find(b => b.id === storedBookReview.id);
+                    if (bookInMemory) {
+                        bookInMemory.reviews = storedBookReview.reviews || [];
+                    }
+                });
+            }
+        }
+
+
+        function displayBookDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = parseInt(urlParams.get('id'));
+
+            const bookDetailContentEl = document.getElementById('bookDetailContent');
+            const loadingMessageEl = document.getElementById('loadingMessage');
+            const errorMessageEl = document.getElementById('errorMessage');
+
+            if (!bookId) {
+                loadingMessageEl.style.display = 'none';
+                errorMessageEl.textContent = "ID Buku tidak valid.";
+                errorMessageEl.style.display = 'block';
+                return;
+            }
+
+            const book = dummyBooks.find(b => b.id === bookId);
+
+            if (book) {
+                document.title = book.title + " - Detail Buku"; // Update page title
+                document.getElementById('bookCover').src = book.image || 'images/default-cover.png'; // Fallback image
+                document.getElementById('bookCover').alt = "Cover " + book.title;
+                document.getElementById('bookTitle').textContent = book.title;
+                document.getElementById('bookAuthor').textContent = book.author || 'Tidak diketahui';
+                document.getElementById('bookCategory').textContent = book.category || 'Tidak ada kategori';
+                document.getElementById('bookDescription').textContent = book.description;
+                document.getElementById('reviewBookId').value = book.id;
+
+                displayReviewsForBook(book);
+
+                loadingMessageEl.style.display = 'none';
+                bookDetailContentEl.style.display = 'block';
+            } else {
+                loadingMessageEl.style.display = 'none';
+                errorMessageEl.textContent = "Buku dengan ID tersebut tidak ditemukan.";
+                errorMessageEl.style.display = 'block';
+            }
+        }
+
+        function displayReviewsForBook(book) {
+            const reviewsListEl = document.getElementById('bookReviewsList');
+            reviewsListEl.innerHTML = ''; // Clear current reviews
+
+            if (book.reviews && book.reviews.length > 0) {
+                book.reviews.forEach(review => {
+                    const reviewDiv = document.createElement('div');
+                    reviewDiv.classList.add('review-item');
+                    reviewDiv.innerHTML = `
+                        <strong>${review.user ? review.user : 'Anonim'}</strong>
+                        <p>${review.text}</p>
+                    `;
+                    reviewsListEl.appendChild(reviewDiv);
+                });
+            } else {
+                reviewsListEl.innerHTML = '<p class="text-muted">Belum ada ulasan untuk buku ini. Jadilah yang pertama!</p>';
+            }
+        }
+
+        document.getElementById('reviewForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const bookId = parseInt(document.getElementById('reviewBookId').value);
+            const reviewerName = document.getElementById('reviewerName').value.trim();
+            const reviewText = document.getElementById('reviewText').value.trim();
+
+            if (!reviewText) {
+                alert('Ulasan tidak boleh kosong.');
+                return;
+            }
+
+            const bookToUpdate = dummyBooks.find(b => b.id === bookId);
+            if (bookToUpdate) {
+                const newReview = {
+                    user: reviewerName || 'Anonim',
+                    text: reviewText
+                };
+                if (!bookToUpdate.reviews) { // Inisialisasi jika belum ada array reviews
+                    bookToUpdate.reviews = [];
+                }
+                bookToUpdate.reviews.push(newReview);
+                displayReviewsForBook(bookToUpdate); // Refresh reviews list
+                saveAllReviewsToLocalStorage(); // Simpan semua ulasan (termasuk yang baru)
+                alert('Ulasan berhasil dikirim!');
+                this.reset(); // Reset form fields
+            } else {
+                alert('Gagal menambahkan ulasan: Buku tidak ditemukan.');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllReviewsFromLocalStorage(); // Muat ulasan saat halaman detail dimuat
+            displayBookDetails();
+        });
+    </script>
+</body>
+</html>
